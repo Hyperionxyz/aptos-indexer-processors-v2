@@ -85,7 +85,7 @@ impl Processable for FungibleAssetStorer {
         )>,
     ) -> Result<Option<TransactionContext<Self::Output>>, ProcessorError> {
         let (
-            fungible_asset_activities,
+            _fungible_asset_activities,
             fungible_asset_metadata,
             _,
             (current_unified_fab_v1, current_unified_fab_v2),
@@ -98,26 +98,15 @@ impl Processable for FungibleAssetStorer {
         let (
             current_unified_fab_v1,
             current_unified_fab_v2,
-            fungible_asset_activities,
             fungible_asset_metadata,
             fa_to_coin_mappings,
         ) = filter_datasets!(self, {
             current_unified_fab_v1 => TableFlags::CURRENT_FUNGIBLE_ASSET_BALANCES,
             current_unified_fab_v2 => TableFlags::CURRENT_FUNGIBLE_ASSET_BALANCES,
-            fungible_asset_activities => TableFlags::FUNGIBLE_ASSET_ACTIVITIES,
             fungible_asset_metadata => TableFlags::FUNGIBLE_ASSET_METADATA,
             fa_to_coin_mappings => TableFlags::FUNGIBLE_ASSET_TO_COIN_MAPPINGS,
         });
 
-        let faa = execute_in_chunks(
-            self.conn_pool.clone(),
-            insert_fungible_asset_activities_query,
-            &fungible_asset_activities,
-            get_config_table_chunk_size::<PostgresFungibleAssetActivity>(
-                "fungible_asset_activities",
-                &per_table_chunk_sizes,
-            ),
-        );
         let fam = execute_in_chunks(
             self.conn_pool.clone(),
             insert_fungible_asset_metadata_query,
@@ -154,9 +143,9 @@ impl Processable for FungibleAssetStorer {
                 &per_table_chunk_sizes,
             ),
         );
-        let (faa_res, fam_res, cufab1_res, cufab2_res, fatcm_res) =
-            tokio::join!(faa, fam, cufab_v1, cufab_v2, fatcm);
-        for res in [faa_res, fam_res, cufab1_res, cufab2_res, fatcm_res] {
+        let (fam_res, cufab1_res, cufab2_res, fatcm_res) =
+            tokio::join!(fam, cufab_v1, cufab_v2, fatcm);
+        for res in [fam_res, cufab1_res, cufab2_res, fatcm_res] {
             match res {
                 Ok(_) => {},
                 Err(e) => {
