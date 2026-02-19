@@ -175,6 +175,22 @@ impl NamedStep for FungibleAssetStorer {
     }
 }
 
+pub fn insert_fungible_asset_activities_query(
+    items_to_insert: Vec<PostgresFungibleAssetActivity>,
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
+    use schema::fungible_asset_activities::dsl::*;
+
+    diesel::insert_into(schema::fungible_asset_activities::table)
+        .values(items_to_insert)
+        .on_conflict((transaction_version, event_index))
+        .do_update()
+        .set((
+            storage_id.eq(excluded(storage_id)),
+            owner_address.eq(excluded(owner_address)),
+            asset_type.eq(excluded(asset_type)),
+        ))
+}
+
 pub fn insert_fungible_asset_metadata_query(
     items_to_insert: Vec<PostgresFungibleAssetMetadataModel>,
 ) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
