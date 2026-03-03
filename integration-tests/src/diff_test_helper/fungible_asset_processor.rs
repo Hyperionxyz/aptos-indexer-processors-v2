@@ -2,7 +2,7 @@ use crate::models::fa_v2_models::{
     CurrentUnifiedFungibleAssetBalance, FungibleAssetBalance, FungibleAssetMetadataModel,
 };
 use anyhow::Result;
-use diesel::{pg::PgConnection, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, pg::PgConnection};
 use processor::schema::{
     current_fungible_asset_balances::dsl as cfab_dsl, fungible_asset_balances::dsl as fab_dsl,
     fungible_asset_metadata::dsl as fam_dsl,
